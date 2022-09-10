@@ -1,0 +1,34 @@
+name: main
+
+on:
+  push:
+
+jobs:
+  build_poetry:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8.10', '3.9.5']
+        poetry-version: ['1.2.0']
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Build poetry
+        run: |
+          sudo chmod 777 /root
+          curl -sSL https://install.python-poetry.org | python -
+          zip -r poetry.zip $POETRY_HOME
+        env:
+          POETRY_HOME: /root/.poetry
+          POETRY_VERSION: ${{ matrix.poetry-version }}
+
+      - name: Create GitHub release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: poetry-${{ matrix.poetry-version }}_python-${{ matrix.python-version }}
+          files: poetry.zip
